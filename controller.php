@@ -10,17 +10,22 @@ use \Concrete\Package\CommunityStore\Src\CommunityStore\Payment\Method as Paymen
 class Controller extends Package
 {
     protected $pkgHandle = 'community_store_eway';
-    protected $appVersionRequired = '5.7.5';
-    protected $pkgVersion = '0.9';
+    protected $appVersionRequired = '8.5';
+    protected $pkgVersion = '0.9.1';
 
-    public function getPackageDescription()
+	protected $pkgAutoloaderRegistries = [
+		'src/CommunityStore' => '\Concrete\Package\CommunityStoreEway\Src\CommunityStore',
+	];
+
+
+	public function getPackageDescription()
     {
-        return t("Eway Payment Method for Community Store");
+        return t('Eway Payment Method for Community Store');
     }
 
     public function getPackageName()
     {
-        return t("Eway Payment Method");
+        return t('Eway Payment Method');
     }
 
     public function install()

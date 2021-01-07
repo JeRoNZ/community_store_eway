@@ -24,37 +24,31 @@ class CommunityStoreEwayPaymentMethod extends StorePaymentMethod {
 	public function redirectForm () {
 		$client = $this->makeClient();
 
-		$oid = Session::get('orderID');
-		$order = StoreOrder::getByID($oid);
-		if (!$order) {
-			throw new \Exception('Unable to find the order');
-		}
-		/* @var $order StoreOrder */
-
-		$custID = $order->getCustomerID();
-		$customer = new StoreCustomer($custID);
+		$customer = new StoreCustomer();
+		/* @var $customer \Concrete\Package\CommunityStore\Src\CommunityStore\Customer\Customer */
+		$order = StoreOrder::getByID(Session::get('orderID'));
 
 		$transaction = [
 			'Customer' => [
-				'FirstName' => $customer->getValue("billing_first_name"),
-				'LastName' => $customer->getValue("billing_last_name"),
-				'Street1' => $customer->getValue("billing_address")->address1,
-				'Street2' => $customer->getValue("billing_address")->address2,
-				'City' => $customer->getValue("billing_address")->city,
-				'State' => $customer->getValue("billing_address")->state_province,
-				'PostalCode' => $customer->getValue("billing_address")->postal_code,
-				'Country' => $customer->getValue("billing_address")->country,
+				'FirstName' => $customer->getValue('billing_first_name'),
+				'LastName' => $customer->getValue('billing_last_name'),
+				'Street1' => $customer->getValue('billing_address')->address1,
+				'Street2' => $customer->getValue('billing_address')->address2,
+				'City' => $customer->getValue('billing_address')->city,
+				'State' => $customer->getValue('billing_address')->state_province,
+				'PostalCode' => $customer->getValue('billing_address')->postal_code,
+				'Country' => $customer->getValue('billing_address')->country,
 				'Email' => $customer->getEmail(),
 			],
 			'ShippingAddress' => [
-				'FirstName' => $customer->getValue("billing_first_name"),
-				'LastName' => $customer->getValue("billing_last_name"),
-				'Street1' => $customer->getValue("billing_address")->address1,
-				'Street2' => $customer->getValue("billing_address")->address2,
-				'City' => $customer->getValue("billing_address")->city,
-				'State' => $customer->getValue("billing_address")->state_province,
-				'PostalCode' => $customer->getValue("billing_address")->postal_code,
-				'Country' => $customer->getValue("billing_address")->country,
+				'FirstName' => $customer->getValue('billing_first_name'),
+				'LastName' => $customer->getValue('billing_last_name'),
+				'Street1' => $customer->getValue('billing_address')->address1,
+				'Street2' => $customer->getValue('billing_address')->address2,
+				'City' => $customer->getValue('billing_address')->city,
+				'State' => $customer->getValue('billing_address')->state_province,
+				'PostalCode' => $customer->getValue('billing_address')->postal_code,
+				'Country' => $customer->getValue('billing_address')->country,
 				'Email' => $customer->getEmail(),
 			],
 			'RedirectUrl' => (string) \URL::to('/checkout/ewayreturn'),
@@ -62,7 +56,7 @@ class CommunityStoreEwayPaymentMethod extends StorePaymentMethod {
 			'TransactionType' => \Eway\Rapid\Enum\TransactionType::PURCHASE,
 			'Payment' => [
 				'TotalAmount' => floor($order->getTotal() * 100), // This is in cents
-				'InvoiceNumber' => (int) $oid,
+				'InvoiceNumber' => (int) $order->getOrderID(),
 				// 'InvoiceDescription' =>
 				// 'InvoiceReference' =>
 				'CurrencyCode' => Config::get('community_store_eway.ewayCurrency')
@@ -76,11 +70,11 @@ class CommunityStoreEwayPaymentMethod extends StorePaymentMethod {
 		/* @$response Eway\Rapid\Model\Response\CreateTransactionResponse */
 		if (!$response->getErrors()) {
 			$sharedURL = $response->SharedPaymentUrl;
-			$this->redirect($sharedURL);
-		} else {
-			\Log::addEntry(__METHOD__ . " client->createTransaction failed\nError:\n" . implode("\n", $response->getErrors()), 'Eway');
-			throw new \Exception('Error communicating with card gateway');
+			header('Location: '.$sharedURL);
+			die();
 		}
+		\Log::addEntry(__METHOD__ . " client->createTransaction failed\nError:\n" . implode("\n", $response->getErrors()), 'Eway');
+		throw new \Exception('Error communicating with card gateway');
 	}
 
 
