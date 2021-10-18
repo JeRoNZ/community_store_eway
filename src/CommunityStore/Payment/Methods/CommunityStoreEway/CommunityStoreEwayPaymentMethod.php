@@ -21,7 +21,7 @@ require(DIR_PACKAGES . DIRECTORY_SEPARATOR . 'community_store_eway' . DIRECTORY_
 
 class CommunityStoreEwayPaymentMethod extends StorePaymentMethod {
 
-	public function redirectForm () {
+	public function getAction () {
 		$client = $this->makeClient();
 
 		$customer = new StoreCustomer();
@@ -68,13 +68,12 @@ class CommunityStoreEwayPaymentMethod extends StorePaymentMethod {
 		// Submit data to eWAY to get a Shared Page URL
 		$response = $client->createTransaction(\Eway\Rapid\Enum\ApiMethod::RESPONSIVE_SHARED, $transaction);
 		/* @$response Eway\Rapid\Model\Response\CreateTransactionResponse */
-		if (!$response->getErrors()) {
-			$sharedURL = $response->SharedPaymentUrl;
-			header('Location: '.$sharedURL);
-			die();
+		if ($response->getErrors()) {
+			\Log::addEntry(__METHOD__ . " client->createTransaction failed\nError:\n" . implode("\n", $response->getErrors()), 'Eway');
+			throw new \Exception('Error communicating with card gateway');
 		}
-		\Log::addEntry(__METHOD__ . " client->createTransaction failed\nError:\n" . implode("\n", $response->getErrors()), 'Eway');
-		throw new \Exception('Error communicating with card gateway');
+		return $response->SharedPaymentUrl;
+
 	}
 
 
